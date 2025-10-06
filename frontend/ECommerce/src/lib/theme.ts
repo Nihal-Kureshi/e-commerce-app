@@ -14,12 +14,14 @@ export const radii = {
   lg: 16,
 };
 
+import { fontScale } from '../utils/responsive';
+
 export const typography = {
-  heading1: { fontSize: 24, fontWeight: '700' as const, lineHeight: 32, fontFamily: 'Inter' },
-  heading2: { fontSize: 20, fontWeight: '600' as const, lineHeight: 28, fontFamily: 'Inter' },
-  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24, fontFamily: 'Inter' },
-  caption: { fontSize: 14, fontWeight: '500' as const, lineHeight: 20, fontFamily: 'Inter' },
-  button: { fontSize: 16, fontWeight: '500' as const, lineHeight: 24, fontFamily: 'Inter' },
+  heading1: { fontSize: fontScale(24), fontWeight: '700' as const, lineHeight: fontScale(32), fontFamily: 'Inter' },
+  heading2: { fontSize: fontScale(20), fontWeight: '600' as const, lineHeight: fontScale(28), fontFamily: 'Inter' },
+  body: { fontSize: fontScale(16), fontWeight: '400' as const, lineHeight: fontScale(24), fontFamily: 'Inter' },
+  caption: { fontSize: fontScale(14), fontWeight: '500' as const, lineHeight: fontScale(20), fontFamily: 'Inter' },
+  button: { fontSize: fontScale(16), fontWeight: '500' as const, lineHeight: fontScale(24), fontFamily: 'Inter' },
 };
 
 export const lightColors = {

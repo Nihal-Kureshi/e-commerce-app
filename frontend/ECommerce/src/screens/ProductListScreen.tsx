@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
 import ProductCard from '../components/ProductCard';
+import { wp, hp, scale, isTablet, getResponsiveValue, iconScale, fontScale } from '../utils/responsive';
 
 export default function ProductListScreen({ navigation }: any) {
   const { theme, toggleTheme, isDark } = useTheme();
@@ -188,7 +189,7 @@ export default function ProductListScreen({ navigation }: any) {
             <View style={styles.brandRow}>
               <View style={styles.brandContainer}>
                 <View style={styles.brandIcon}>
-                  <Icon name="cube-outline" size={24} color="#FFFFFF" />
+                  <Icon name="cube-outline" size={iconScale(24)} color="#FFFFFF" />
                 </View>
                 <View>
                   <Text style={styles.brandText}>ShopEasy</Text>
@@ -200,13 +201,13 @@ export default function ProductListScreen({ navigation }: any) {
                   style={styles.headerButton} 
                   onPress={() => navigation.navigate('Search')}
                 >
-                  <Icon name="search-outline" size={20} color="#FFFFFF" />
+                  <Icon name="search-outline" size={iconScale(20)} color="#FFFFFF" />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.headerButton} 
                   onPress={() => navigation.navigate('Cart')}
                 >
-                  <Icon name="bag-outline" size={20} color="#FFFFFF" />
+                  <Icon name="bag-outline" size={iconScale(20)} color="#FFFFFF" />
                   {cart.length > 0 && (
                     <View style={styles.cartBadge}>
                       <Text style={styles.cartBadgeText}>{cart.length}</Text>
@@ -229,7 +230,7 @@ export default function ProductListScreen({ navigation }: any) {
               onPress={() => handleCategoryPress(null, 0)}
               style={[styles.tab, !activeCategory && styles.tabActive]}
             >
-              <Icon name="apps-outline" size={20} color={!activeCategory ? theme.colors.primary : theme.colors.textSecondary} />
+              <Icon name="apps-outline" size={iconScale(20)} color={!activeCategory ? theme.colors.primary : theme.colors.textSecondary} />
               <Text style={[styles.tabText, !activeCategory && styles.tabTextActive]}>All</Text>
             </TouchableOpacity>
             {categories.map((c, index) => {
@@ -248,7 +249,7 @@ export default function ProductListScreen({ navigation }: any) {
                   onPress={() => handleCategoryPress(c, index + 1)}
                   style={[styles.tab, activeCategory === c && styles.tabActive]}
                 >
-                  <Icon name={getIcon(c)} size={20} color={activeCategory === c ? theme.colors.primary : theme.colors.textSecondary} />
+                  <Icon name={getIcon(c)} size={iconScale(20)} color={activeCategory === c ? theme.colors.primary : theme.colors.textSecondary} />
                   <Text style={[styles.tabText, activeCategory === c && styles.tabTextActive]}>{c}</Text>
                 </TouchableOpacity>
               );
@@ -260,7 +261,7 @@ export default function ProductListScreen({ navigation }: any) {
           >
             <Icon 
               name={grid ? 'list-outline' : 'grid-outline'} 
-              size={20} 
+              size={iconScale(20)} 
               color={theme.colors.textPrimary} 
             />
           </TouchableOpacity>
@@ -273,7 +274,7 @@ export default function ProductListScreen({ navigation }: any) {
           </View>
         ) : error ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-            <Icon name="alert-circle-outline" size={64} color={theme.colors.error} />
+            <Icon name="alert-circle-outline" size={iconScale(64)} color={theme.colors.error} />
             <Text style={{ marginTop: 16, color: theme.colors.error, textAlign: 'center' }}>{error}</Text>
             <TouchableOpacity 
               onPress={loadProducts}
@@ -284,11 +285,11 @@ export default function ProductListScreen({ navigation }: any) {
           </View>
         ) : (
           <FlatList
-            contentContainerStyle={{ padding: theme.spacing.sm, paddingTop: 0 }}
+            contentContainerStyle={{ padding: 8, paddingTop: 0 }}
             data={filtered}
-            numColumns={grid ? 2 : 1}
-            key={grid ? 'g' : 'l'}
-            columnWrapperStyle={grid ? { justifyContent: 'flex-start', gap: 8 } : undefined}
+            numColumns={grid ? 4 : 2}
+            key={grid ? 'g-4' : 'l-2'}
+            columnWrapperStyle={grid ? { justifyContent: 'space-around', paddingHorizontal: 4 } : { justifyContent: 'space-between', paddingHorizontal: 16 }}
             renderItem={({ item }) => (
               <ProductCard product={item} onAdd={addToCart} navigation={navigation} isGrid={grid} />
             )}

@@ -15,6 +15,7 @@ import SearchScreen from './SearchScreen';
 import ProductDetailScreen from './ProductDetailScreen';
 import OrderDetailScreen from './OrderDetailScreen';
 import { useMockData } from '../hooks/useMockData';
+import { scale, iconScale, fontScale } from '../utils/responsive';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,16 +34,19 @@ function MainTabs() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
-          height: 64,
-          paddingBottom: 8,
+          height: scale(64),
+          paddingBottom: scale(8),
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.outline,
+        },
+        tabBarLabelStyle: {
+          fontSize: fontScale(12),
         },
         tabBarIcon: ({ color, size }) => {
           let name: any = 'home';
           if (route.name === 'Products') name = 'grid-outline';
           if (route.name === 'Settings') name = 'settings-outline';
-          return <Icon name={name} size={size} color={color} />;
+          return <Icon name={name} size={iconScale(size)} color={color} />;
         },
       })}
     >

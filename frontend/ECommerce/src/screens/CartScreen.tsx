@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
 import { strings } from '../constants/strings';
+import { wp, scale, isTablet, getResponsiveValue, iconScale, fontScale } from '../utils/responsive';
 
 export default function CartScreen({ navigation }: any) {
   const { theme, isDark } = useTheme();
@@ -228,6 +229,9 @@ export default function CartScreen({ navigation }: any) {
       shadowRadius: 12,
       borderWidth: 1,
       borderColor: theme.colors.outline,
+      maxWidth: isTablet() ? 600 : '100%',
+      alignSelf: 'center',
+      width: '100%',
     },
     summaryRow: {
       flexDirection: 'row',
@@ -263,14 +267,14 @@ export default function CartScreen({ navigation }: any) {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={theme.colors.textPrimary} />
+          <Icon name="arrow-back" size={iconScale(24)} color={theme.colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Shopping Cart</Text>
       </View>
 
       <FlatList
         data={cart}
-        contentContainerStyle={{ padding: theme.spacing.md }}
+        contentContainerStyle={{ padding: 16 }}
         keyExtractor={(i: any) => i.product.id}
         ListHeaderComponent={
           cart.length > 0 ? (
@@ -278,7 +282,7 @@ export default function CartScreen({ navigation }: any) {
               <View style={styles.selectAllLeft}>
                 <Icon 
                   name={selectedItems.size === cart.length ? "checkbox" : "square-outline"} 
-                  size={24} 
+                  size={iconScale(24)} 
                   color={theme.colors.primary} 
                 />
                 <Text style={styles.selectAllText}>Select All</Text>
@@ -295,7 +299,7 @@ export default function CartScreen({ navigation }: any) {
             >
               <Icon 
                 name={selectedItems.has(item.product.id) ? "checkbox" : "square-outline"} 
-                size={24} 
+                size={iconScale(24)} 
                 color={theme.colors.primary} 
               />
             </TouchableOpacity>
@@ -320,7 +324,7 @@ export default function CartScreen({ navigation }: any) {
                 }
                 style={styles.qtyBtn}
               >
-                <Icon name="remove-outline" size={16} color="#FFFFFF" />
+                <Icon name="remove-outline" size={iconScale(16)} color="#FFFFFF" />
               </TouchableOpacity>
               <Text style={styles.qtyText}>{item.quantity}</Text>
               <TouchableOpacity
@@ -329,14 +333,14 @@ export default function CartScreen({ navigation }: any) {
                 }
                 style={styles.qtyBtn}
               >
-                <Icon name="add-outline" size={16} color="#FFFFFF" />
+                <Icon name="add-outline" size={iconScale(16)} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
             <TouchableOpacity
               onPress={() => removeFromCart(item.product.id)}
               style={styles.remove}
             >
-              <Icon name="trash-outline" size={16} color={theme.colors.error} />
+              <Icon name="trash-outline" size={iconScale(16)} color={theme.colors.error} />
             </TouchableOpacity>
           </View>
         )}
@@ -369,7 +373,7 @@ export default function CartScreen({ navigation }: any) {
           </View>
 
           <TouchableOpacity style={styles.checkoutBtn} onPress={onCheckout}>
-            <Icon name="flash-outline" size={20} color="#FFFFFF" />
+            <Icon name="flash-outline" size={iconScale(20)} color="#FFFFFF" />
             <Text style={styles.checkoutBtnText}>
               {strings.proceedToCheckout}
             </Text>

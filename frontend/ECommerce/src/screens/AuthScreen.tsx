@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -14,6 +15,7 @@ import { apiService } from '../services/api';
 import { strings } from '../constants/strings';
 import { validateEmail, validatePassword, validateName } from '../utils/validation';
 import { useDebounce } from '../hooks/useDebounce';
+import { wp, hp, scale, isTablet, getResponsiveValue, iconScale, fontScale } from '../utils/responsive';
 
 export default function AuthScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -126,14 +128,16 @@ export default function AuthScreen({ navigation }: any) {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      padding: 24,
-      justifyContent: 'center',
       backgroundColor: theme.colors.background,
     },
-
+    scrollContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: isTablet() ? 32 : 24,
+    },
     form: {
       backgroundColor: theme.colors.surface,
-      padding: 20,
+      padding: isTablet() ? 40 : 20,
       borderRadius: theme.radii.md,
       elevation: 4,
       shadowColor: theme.colors.shadow,
@@ -142,16 +146,19 @@ export default function AuthScreen({ navigation }: any) {
       shadowRadius: 12,
       borderWidth: 1,
       borderColor: theme.colors.outline,
+      maxWidth: isTablet() ? 500 : '100%',
+      alignSelf: 'center',
+      width: '100%',
     },
     input: {
       borderWidth: 1,
       borderColor: theme.colors.outline,
-      padding: 12,
+      padding: scale(12),
       borderRadius: theme.radii.md,
-      marginBottom: 4,
+      marginBottom: scale(4),
       backgroundColor: theme.colors.surface,
       color: theme.colors.textPrimary,
-      fontSize: 16,
+      fontSize: fontScale(16),
     },
     inputError: {
       borderColor: theme.colors.error,
@@ -169,12 +176,12 @@ export default function AuthScreen({ navigation }: any) {
     passwordInput: {
       borderWidth: 1,
       borderColor: theme.colors.outline,
-      padding: 12,
-      paddingRight: 45,
+      padding: scale(12),
+      paddingRight: scale(45),
       borderRadius: theme.radii.md,
       backgroundColor: theme.colors.surface,
       color: theme.colors.textPrimary,
-      fontSize: 16,
+      fontSize: fontScale(16),
     },
     passwordInputError: {
       borderColor: theme.colors.error,
@@ -190,6 +197,7 @@ export default function AuthScreen({ navigation }: any) {
       padding: 14,
       borderRadius: theme.radii.md,
       alignItems: 'center',
+      marginTop: 8,
     },
     primaryBtnText: {
       color: '#FFFFFF',
@@ -199,7 +207,7 @@ export default function AuthScreen({ navigation }: any) {
       textAlign: 'center',
       color: theme.colors.textSecondary,
       marginVertical: 12,
-      ...theme.typography.caption,
+      fontSize: 14,
     },
     socialRow: {
       flexDirection: 'row',
@@ -225,13 +233,18 @@ export default function AuthScreen({ navigation }: any) {
     },
     linkText: {
       color: theme.colors.accent,
-      ...theme.typography.caption,
+      fontSize: 14,
     },
   });
 
   return (
     <View style={styles.container}>
-      <View style={styles.form}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.form}>
         {isRegister && (
           <>
             <TextInput
@@ -272,7 +285,7 @@ export default function AuthScreen({ navigation }: any) {
           >
             <Icon 
               name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
-              size={20} 
+              size={iconScale(20)} 
               color={theme.colors.textSecondary} 
             />
           </TouchableOpacity>
@@ -296,20 +309,20 @@ export default function AuthScreen({ navigation }: any) {
             style={styles.socialBtn}
             onPress={() => Alert.alert(strings.facebookLogin, strings.featureAvailableSoon)}
           >
-            <Icon name="logo-facebook" size={24} color="#FFFFFF" />
+            <Icon name="logo-facebook" size={iconScale(24)} color="#FFFFFF" />
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.socialBtn}
             onPress={() => Alert.alert(strings.googleLogin, strings.featureAvailableSoon)}
           >
-            <Icon name="logo-google" size={24} color="#FFFFFF" />
+            <Icon name="logo-google" size={iconScale(24)} color="#FFFFFF" />
           </TouchableOpacity>
           {Platform.OS === 'ios' && (
             <TouchableOpacity 
               style={styles.socialBtn}
               onPress={() => Alert.alert(strings.appleLogin, strings.featureAvailableSoon)}
             >
-              <Icon name="logo-apple" size={24} color="#FFFFFF" />
+              <Icon name="logo-apple" size={iconScale(24)} color="#FFFFFF" />
             </TouchableOpacity>
           )}
         </View>
@@ -322,7 +335,8 @@ export default function AuthScreen({ navigation }: any) {
             {isRegister ? strings.alreadyHaveAccount : strings.signUp}
           </Text>
         </TouchableOpacity>
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }

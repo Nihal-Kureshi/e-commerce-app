@@ -4,6 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { Product } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { wp, moderateScale, isTablet, getResponsiveValue, fontScale, iconScale } from '../utils/responsive';
 
 type Props = {
   product: Product;
@@ -15,12 +16,14 @@ type Props = {
 export default function ProductCard({ product, onAdd, navigation, isGrid = true }: Props) {
   const { theme } = useTheme();
   
+
+  
   const styles = StyleSheet.create({
     card: {
       borderRadius: theme.radii.md,
       overflow: 'hidden',
-      margin: isGrid ? theme.spacing.sm : 16,
-      width: isGrid ? 160 : undefined,
+      marginVertical: 8,
+      width: isGrid ? wp(21) : wp(42),
       height: isGrid ? 200 : 200,
       elevation: 2,
       shadowColor: '#000',
@@ -56,10 +59,10 @@ export default function ProductCard({ product, onAdd, navigation, isGrid = true 
       bottom: 0,
       left: 0,
       right: 0,
-      padding: theme.spacing.sm,
+      padding: 8,
     },
     title: {
-      ...theme.typography.caption,
+      fontSize: 12,
       color: '#FFFFFF',
       marginBottom: 4,
       fontWeight: '600',
@@ -70,7 +73,7 @@ export default function ProductCard({ product, onAdd, navigation, isGrid = true 
       justifyContent: 'space-between',
     },
     price: {
-      ...theme.typography.body,
+      fontSize: 14,
       fontWeight: '700',
       color: theme.colors.primary,
     },
