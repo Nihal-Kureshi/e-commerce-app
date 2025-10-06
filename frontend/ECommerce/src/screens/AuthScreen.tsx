@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useTheme } from '../lib/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import { apiService } from '../services/api';
 import { strings } from '../constants/strings';
 

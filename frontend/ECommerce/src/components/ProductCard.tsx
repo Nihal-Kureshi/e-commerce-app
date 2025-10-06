@@ -1,58 +1,67 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Product } from '../types';
-import { useTheme } from '../lib/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 type Props = {
   product: Product;
   onAdd: (p: Product) => void;
   navigation?: any;
+  isGrid?: boolean;
 };
 
-export default function ProductCard({ product, onAdd, navigation }: Props) {
+export default function ProductCard({ product, onAdd, navigation, isGrid = true }: Props) {
   const { theme } = useTheme();
   
   const styles = StyleSheet.create({
     card: {
-      backgroundColor: theme.colors.surface,
       borderRadius: theme.radii.md,
       overflow: 'hidden',
-      margin: theme.spacing.sm,
-      flex: 1,
-      elevation: 4,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      borderWidth: 2,
-      borderColor: theme.colors.primary + '10',
-    },
-    imageContainer: {
+      margin: isGrid ? theme.spacing.sm : 16,
+      width: isGrid ? 160 : undefined,
+      height: isGrid ? 200 : 200,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      flex: isGrid ? 0 : 1,
       position: 'relative',
-      height: 110,
     },
     image: {
       width: '100%',
       height: '100%',
       resizeMode: 'cover',
+      position: isGrid ? 'absolute' : 'absolute',
     },
-    imageOverlay: {
+    overlay: {
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
-      height: '50%',
-      backgroundColor: theme.colors.primary,
-      opacity: 0.4,
+      height: '60%',
+      backgroundColor: 'rgba(255,255,255,0)',
     },
-    body: {
+    gradientOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: isGrid ? '50%' : '60%',
+    },
+    content: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
       padding: theme.spacing.sm,
     },
     title: {
       ...theme.typography.caption,
-      color: theme.colors.textPrimary,
-      marginBottom: theme.spacing.xs,
+      color: '#FFFFFF',
+      marginBottom: 4,
       fontWeight: '600',
     },
     row: {
@@ -67,13 +76,12 @@ export default function ProductCard({ product, onAdd, navigation }: Props) {
     },
     addBtn: {
       backgroundColor: theme.colors.primary,
-      padding: 8,
-      borderRadius: theme.radii.md,
-      elevation: 2,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
+      padding: 6,
+      borderRadius: 20,
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
     }
   });
 
@@ -82,16 +90,17 @@ export default function ProductCard({ product, onAdd, navigation }: Props) {
       style={styles.card}
       onPress={() => navigation?.navigate('ProductDetail', { product })}
     >
-      <View style={styles.imageContainer}>
-        <Image source={{ uri: product.image }} style={styles.image} />
-        <View style={styles.imageOverlay} />
-      </View>
-      <View style={styles.body}>
+      <Image source={{ uri: product.image }} style={styles.image} />
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        style={styles.gradientOverlay}
+      />
+      <View style={styles.content}>
         <Text numberOfLines={2} style={styles.title}>{product.name}</Text>
         <View style={styles.row}>
           <Text style={styles.price}>${product.price.toFixed(2)}</Text>
           <TouchableOpacity onPress={() => onAdd(product)} style={styles.addBtn} accessibilityLabel={`Add ${product.name} to cart`}>
-            <Icon name="add-circle-outline" size={18} color="#FFFFFF" />
+            <Icon name="add" size={16} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </View>

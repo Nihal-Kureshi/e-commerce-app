@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
-import { useTheme } from '../lib/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
+import { strings } from '../constants/strings';
 
 export default function OrdersScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -147,11 +148,14 @@ export default function OrdersScreen({ navigation }: any) {
         contentContainerStyle={{ padding: theme.spacing.md }}
         keyExtractor={(o: any) => o.id}
         renderItem={({ item }) => (
-          <View style={styles.orderCard}>
+          <TouchableOpacity 
+            style={styles.orderCard}
+            onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })}
+          >
             <View style={styles.orderLeft}>
               <Text style={styles.orderId}>{item.id}</Text>
               <Text style={styles.orderMeta}>
-                {new Date(item.date).toLocaleDateString()} • {item.items.length} futuristic items
+                {new Date(item.createdAt || Date.now()).toLocaleDateString()} • {item.items?.length || 0} items
               </Text>
               <Text style={styles.orderTotal}>${item.total.toFixed(2)}</Text>
             </View>
@@ -169,23 +173,23 @@ export default function OrdersScreen({ navigation }: any) {
               <View style={styles.actionsRow}>
                 <TouchableOpacity
                   style={styles.action}
-                  onPress={() => Alert.alert('🚀 Reorder', `Quantum reorder of ${item.id} added to cart!`)}
+                  onPress={() => Alert.alert('Reorder', `Reorder ${item.id} added to cart!`)}
                 >
                   <Text style={styles.actionText}>Reorder</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.action}
-                  onPress={() => Alert.alert('📡 Track Order', `Tracking ${item.id}: Your tech package is being teleported!`)}
+                  onPress={() => Alert.alert('Track Order', `Tracking order ${item.id}`)}
                 >
                   <Text style={styles.actionText}>Track</Text>
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="cube-outline" size={64} color={theme.colors.textSecondary} />
+            <Icon name="receipt-outline" size={64} color={theme.colors.textSecondary} />
             <Text style={styles.emptyText}>
               {strings.noOrdersYet}
             </Text>

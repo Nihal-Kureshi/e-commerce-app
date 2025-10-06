@@ -36,3 +36,27 @@ export const getUserOrders = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// ✅ Get single order details
+export const getOrderById = async (req, res) => {
+  try {
+    const userId = req.user;
+    const { orderId } = req.params;
+
+    const order = await prisma.order.findFirst({
+      where: { 
+        id: orderId,
+        userId 
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (err) {
+    console.error("Get Order Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

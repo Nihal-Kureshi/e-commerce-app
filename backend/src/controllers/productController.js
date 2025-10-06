@@ -38,11 +38,11 @@ export const seedProducts = async (req, res) => {
       { name: "Ray-Ban Sunglasses", category: "Fashion", price: 150, image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400" },
       { name: "Leather Jacket", category: "Fashion", price: 200, image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400" },
       
-      // Home & Garden
-      { name: "Coffee Maker", category: "Home & Garden", price: 89, image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400" },
-      { name: "Plant Pot Set", category: "Home & Garden", price: 35, image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400" },
-      { name: "Table Lamp", category: "Home & Garden", price: 45, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" },
-      { name: "Throw Pillow", category: "Home & Garden", price: 25, image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400" },
+      // Home
+      { name: "Coffee Maker", category: "Home", price: 89, image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400" },
+      { name: "Plant Pot Set", category: "Home", price: 35, image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400" },
+      { name: "Table Lamp", category: "Home", price: 45, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" },
+      { name: "Throw Pillow", category: "Home", price: 25, image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400" },
       
       // Sports
       { name: "Yoga Mat", category: "Sports", price: 30, image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400" },

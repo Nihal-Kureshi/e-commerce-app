@@ -9,7 +9,8 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
-import { useTheme } from '../lib/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
+import { strings } from '../constants/strings';
 
 export default function CartScreen({ navigation }: any) {
   const { theme, isDark } = useTheme();

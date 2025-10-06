@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
-import { useTheme } from '../lib/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import ProductCard from '../components/ProductCard';
 import { strings } from '../constants/strings';
 
@@ -74,11 +75,12 @@ export default function SearchScreen({ navigation }: any) {
       />
       <FlatList
         style={styles.results}
+        contentContainerStyle={{ padding: 8 }}
         data={filtered}
         numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        columnWrapperStyle={{ justifyContent: 'space-around' }}
         renderItem={({ item }) => (
-          <ProductCard product={item} onAdd={addToCart} navigation={navigation} />
+          <ProductCard product={item} onAdd={addToCart} navigation={navigation} isGrid={true} />
         )}
         keyExtractor={(i: any) => i.id}
         ListEmptyComponent={

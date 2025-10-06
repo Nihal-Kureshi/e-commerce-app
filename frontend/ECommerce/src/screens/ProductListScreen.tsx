@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
-import { useTheme } from '../lib/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import ProductCard from '../components/ProductCard';
 
 export default function ProductListScreen({ navigation }: any) {
@@ -27,7 +27,7 @@ export default function ProductListScreen({ navigation }: any) {
 
   const styles = StyleSheet.create({
     statusBarBg: {
-      backgroundColor: theme.colors.primary,
+      backgroundColor: '#FFFFFF',
       position: 'absolute',
       top: 0,
       left: 0,
@@ -251,9 +251,9 @@ export default function ProductListScreen({ navigation }: any) {
             data={filtered}
             numColumns={grid ? 2 : 1}
             key={grid ? 'g' : 'l'}
-            columnWrapperStyle={grid ? { justifyContent: 'space-between' } : undefined}
+            columnWrapperStyle={grid ? { justifyContent: 'flex-start', gap: 8 } : undefined}
             renderItem={({ item }) => (
-              <ProductCard product={item} onAdd={addToCart} navigation={navigation} />
+              <ProductCard product={item} onAdd={addToCart} navigation={navigation} isGrid={grid} />
             )}
             keyExtractor={(i: any) => i.id}
           />

@@ -1,11 +1,34 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useTheme } from '../lib/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 import { strings } from '../constants/strings';
+import { apiService } from '../services/api';
+import { Alert } from 'react-native';
 
 export default function SettingsScreen({ navigation }: any) {
   const { theme, isDark, toggleTheme } = useTheme();
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await apiService.logout();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Auth' }],
+            });
+          },
+        },
+      ]
+    );
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -95,6 +118,17 @@ export default function SettingsScreen({ navigation }: any) {
           thumbColor={isDark ? 'white' : theme.colors.surface}
         />
       </View>
+      
+      <TouchableOpacity 
+        style={styles.settingItem}
+        onPress={handleLogout}
+      >
+        <View style={styles.settingLeft}>
+          <Icon name="log-out-outline" size={20} color={theme.colors.error} />
+          <Text style={[styles.settingText, { color: theme.colors.error }]}>Logout</Text>
+        </View>
+        <Icon name="chevron-forward-outline" size={20} color={theme.colors.textSecondary} />
+      </TouchableOpacity>
     </View>
   );
 }
