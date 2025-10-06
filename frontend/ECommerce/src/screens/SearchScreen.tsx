@@ -10,6 +10,16 @@ export default function SearchScreen({ navigation }: any) {
   const { theme } = useTheme();
   const { products, addToCart } = useAppData();
   const [query, setQuery] = useState('');
+  const [searchError, setSearchError] = useState('');
+
+  const validateSearch = (searchQuery: string) => {
+    if (searchQuery.length > 0 && searchQuery.length < 2) {
+      setSearchError('Search must be at least 2 characters');
+      return false;
+    }
+    setSearchError('');
+    return true;
+  };
 
   const filtered = products.filter((p: any) =>
     p.name.toLowerCase().includes(query.toLowerCase())
@@ -55,6 +65,13 @@ export default function SearchScreen({ navigation }: any) {
       color: theme.colors.textSecondary,
       marginTop: 50,
     },
+    errorText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginTop: -8,
+      marginLeft: 20,
+      marginBottom: 8,
+    },
   });
 
   return (
@@ -65,14 +82,20 @@ export default function SearchScreen({ navigation }: any) {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Search</Text>
       </View>
-      <TextInput
-        placeholder={strings.searchProducts}
-        placeholderTextColor={theme.colors.textSecondary}
-        style={styles.search}
-        value={query}
-        onChangeText={setQuery}
-        autoFocus
-      />
+      <View>
+        <TextInput
+          placeholder={strings.searchProducts}
+          placeholderTextColor={theme.colors.textSecondary}
+          style={[styles.search, searchError && { borderColor: theme.colors.error }]}
+          value={query}
+          onChangeText={(text) => {
+            setQuery(text);
+            validateSearch(text);
+          }}
+          autoFocus
+        />
+        {searchError ? <Text style={styles.errorText}>{searchError}</Text> : null}
+      </View>
       <FlatList
         style={styles.results}
         contentContainerStyle={{ padding: 8 }}

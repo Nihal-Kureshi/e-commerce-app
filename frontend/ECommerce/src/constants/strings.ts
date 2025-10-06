@@ -53,8 +53,6 @@ export const strings = {
   noOrdersYet: '📦 No orders yet!\nStart shopping to see your orders here.',
   
   // Settings Screen
-  johnDoe: 'John Doe',
-  johnDoeEmail: 'john.doe@example.com',
   darkMode: 'Dark Mode',
   
   // Common

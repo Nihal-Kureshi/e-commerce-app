@@ -73,10 +73,13 @@ export default function HomeScreen() {
     try {
       const token = await apiService.getStoredToken();
       if (token) {
+        // Verify token is valid by making a profile request
+        await apiService.getUserProfile();
         setInitialRoute('Main');
       }
     } catch (error) {
-      console.log('No stored token');
+      console.log('Invalid or no token, redirecting to auth');
+      await apiService.logout(); // Clear invalid token
     } finally {
       setIsReady(true);
     }

@@ -4,34 +4,45 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// CORS configuration
+app.use(cors({ 
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://yourdomain.com'] 
+    : ['http://localhost:3000', 'http://localhost:19006'],
+  credentials: true 
+}));
 
-// Routes
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// Health check route
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Backend server is running 🚀",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 
-
-// ✅ Health check route
-app.get("/", (req, res) => {
-  res.send("Backend server is running 🚀");
-});
-
-// ✅ 404 handler
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
-
-// ✅ Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Internal server error" });
-});
-
+// Error handling middleware
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;

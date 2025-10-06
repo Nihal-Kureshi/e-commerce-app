@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
@@ -14,21 +15,74 @@ import { strings } from '../constants/strings';
 
 export default function CartScreen({ navigation }: any) {
   const { theme, isDark } = useTheme();
-  const { cart, updateQuantity, removeFromCart, cartSummary, placeOrder } =
-    useAppData();
+  const { cart, updateQuantity, removeFromCart, placeOrder } = useAppData();
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
-  async function onCheckout() {
+  // Initialize selected items when cart changes
+  useEffect(() => {
+    setSelectedItems(new Set(cart.map(item => item.product.id)));
+  }, [cart]);
+
+  const toggleItemSelection = useCallback((productId: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedItems.size === cart.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(cart.map(item => item.product.id)));
+    }
+  }, [selectedItems.size, cart]);
+
+  const selectedCartItems = useMemo(() => {
+    return cart.filter(item => selectedItems.has(item.product.id));
+  }, [cart, selectedItems]);
+
+  const selectedCartSummary = useMemo(() => {
+    const subtotal = selectedCartItems.reduce((s, c) => s + c.product.price * c.quantity, 0);
+    const shipping = subtotal > 200 ? 0 : 12.99;
+    const tax = subtotal * 0.08;
+    const total = subtotal + shipping + tax;
+    return { subtotal, shipping, tax, total, itemCount: selectedCartItems.length };
+  }, [selectedCartItems]);
+
+  const onCheckout = useCallback(async () => {
+    // Validation
+    if (cart.length === 0) {
+      Alert.alert('Empty Cart', 'Please add items to cart before checkout');
+      return;
+    }
+    
+    if (selectedItems.size === 0) {
+      Alert.alert('No Items Selected', 'Please select items to checkout');
+      return;
+    }
+    
+    if (selectedCartSummary.total <= 0) {
+      Alert.alert('Invalid Order', 'Order total must be greater than zero');
+      return;
+    }
+    
     try {
-      const order = await placeOrder({}, {});
-      Alert.alert('✅ Order Placed!', `Your order ${order.id} has been successfully placed!`, [
+      const order = await placeOrder(selectedCartItems);
+      Alert.alert('✅ Order Placed!', `Your order #${order.id} has been successfully placed!`, [
         { text: 'View Orders', onPress: () => navigation.navigate('Orders') },
       ]);
     } catch (error: any) {
-      Alert.alert('Order Failed', error.message);
+      Alert.alert('Order Failed', error.message || 'Failed to place order');
     }
-  }
+  }, [cart.length, selectedItems.size, selectedCartSummary.total, selectedCartItems, placeOrder, navigation]);
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
@@ -51,6 +105,43 @@ export default function CartScreen({ navigation }: any) {
       color: theme.colors.textPrimary,
     },
 
+    selectAllRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+      marginHorizontal: 16,
+      marginBottom: 12,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radii.md,
+      elevation: 1,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    selectAllLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    selectAllText: {
+      marginLeft: 12,
+      ...theme.typography.body,
+      fontWeight: '600',
+      color: theme.colors.textPrimary,
+    },
+    selectAllCount: {
+      ...theme.typography.caption,
+      color: theme.colors.textSecondary,
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: theme.radii.sm,
+      overflow: 'hidden',
+    },
     itemRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -65,6 +156,18 @@ export default function CartScreen({ navigation }: any) {
       shadowRadius: 8,
       borderWidth: 1,
       borderColor: theme.colors.outline,
+    },
+    checkbox: {
+      marginRight: 12,
+    },
+    productImage: {
+      width: 60,
+      height: 60,
+      borderRadius: theme.radii.sm,
+      marginRight: 12,
+    },
+    itemContent: {
+      flex: 1,
     },
     itemTitle: {
       ...theme.typography.body,
@@ -154,7 +257,7 @@ export default function CartScreen({ navigation }: any) {
       ...theme.typography.button,
       marginLeft: 8,
     },
-  });
+  }), [theme]);
 
   return (
     <View style={styles.container}>
@@ -169,9 +272,39 @@ export default function CartScreen({ navigation }: any) {
         data={cart}
         contentContainerStyle={{ padding: theme.spacing.md }}
         keyExtractor={(i: any) => i.product.id}
+        ListHeaderComponent={
+          cart.length > 0 ? (
+            <TouchableOpacity style={styles.selectAllRow} onPress={toggleSelectAll}>
+              <View style={styles.selectAllLeft}>
+                <Icon 
+                  name={selectedItems.size === cart.length ? "checkbox" : "square-outline"} 
+                  size={24} 
+                  color={theme.colors.primary} 
+                />
+                <Text style={styles.selectAllText}>Select All</Text>
+              </View>
+              <Text style={styles.selectAllCount}>{selectedItems.size}/{cart.length}</Text>
+            </TouchableOpacity>
+          ) : null
+        }
         renderItem={({ item }) => (
           <View style={styles.itemRow}>
-            <View style={{ flex: 1 }}>
+            <TouchableOpacity 
+              style={styles.checkbox}
+              onPress={() => toggleItemSelection(item.product.id)}
+            >
+              <Icon 
+                name={selectedItems.has(item.product.id) ? "checkbox" : "square-outline"} 
+                size={24} 
+                color={theme.colors.primary} 
+              />
+            </TouchableOpacity>
+            <Image 
+              source={{ uri: item.product.image }} 
+              style={styles.productImage}
+              resizeMode="cover"
+            />
+            <View style={styles.itemContent}>
               <Text style={styles.itemTitle}>{item.product.name}</Text>
               <Text style={styles.itemPrice}>
                 ${(item.product.price * item.quantity).toFixed(2)}
@@ -214,24 +347,24 @@ export default function CartScreen({ navigation }: any) {
         }
       />
 
-      {cart.length > 0 && (
+      {selectedItems.size > 0 && (
         <View style={styles.summary}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryText}>Subtotal</Text>
-            <Text style={styles.summaryText}>${cartSummary.subtotal.toFixed(2)}</Text>
+            <Text style={styles.summaryText}>Subtotal ({selectedCartSummary.itemCount} items)</Text>
+            <Text style={styles.summaryText}>${selectedCartSummary.subtotal.toFixed(2)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryText}>{strings.shipping}</Text>
-            <Text style={styles.summaryText}>${cartSummary.shipping.toFixed(2)}</Text>
+            <Text style={styles.summaryText}>${selectedCartSummary.shipping.toFixed(2)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryText}>Tax</Text>
-            <Text style={styles.summaryText}>${cartSummary.tax.toFixed(2)}</Text>
+            <Text style={styles.summaryText}>${selectedCartSummary.tax.toFixed(2)}</Text>
           </View>
           <View style={[styles.summaryRow, { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.colors.outline }]}>
             <Text style={styles.summaryTotal}>Total</Text>
             <Text style={styles.summaryTotal}>
-              ${cartSummary.total.toFixed(2)}
+              ${selectedCartSummary.total.toFixed(2)}
             </Text>
           </View>
 

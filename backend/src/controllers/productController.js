@@ -3,17 +3,27 @@ import prisma from "../config/db.js";
 // ✅ Get all products (with optional category/search)
 export const getProducts = async (req, res) => {
   try {
-    const { category, search } = req.query;
+    const { category, search, limit, offset } = req.query;
 
     const where = {};
-    if (category) where.category = category;
-    if (search) where.name = { contains: search, mode: "insensitive" };
+    if (category) {
+      where.category = category;
+    }
+    if (search) {
+      where.name = { contains: search, mode: "insensitive" };
+    }
 
-    const products = await prisma.product.findMany({ where });
+    const products = await prisma.product.findMany({ 
+      where,
+      take: limit ? parseInt(limit) : undefined,
+      skip: offset ? parseInt(offset) : undefined,
+      orderBy: { id: 'asc' }
+    });
+    
     res.json(products);
   } catch (err) {
     console.error("Get Products Error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Failed to load products. Please try again." });
   }
 };
 
@@ -60,6 +70,6 @@ export const seedProducts = async (req, res) => {
     res.json({ message: "Products seeded", count: created.count });
   } catch (err) {
     console.error("Seed Products Error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Failed to seed products. Please try again." });
   }
 };

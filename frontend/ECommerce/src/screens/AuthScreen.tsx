@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import { apiService } from '../services/api';
 import { strings } from '../constants/strings';
+import { validateEmail, validatePassword, validateName } from '../utils/validation';
+import { useDebounce } from '../hooks/useDebounce';
 
 export default function AuthScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -21,10 +23,56 @@ export default function AuthScreen({ navigation }: any) {
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  
+  const debouncedEmail = useDebounce(email, 500);
+  const debouncedPassword = useDebounce(password, 500);
+  const debouncedName = useDebounce(name, 500);
+
+  const validateField = (field: string, value: string) => {
+    let error = null;
+    switch (field) {
+      case 'email':
+        error = validateEmail(value);
+        break;
+      case 'password':
+        error = validatePassword(value);
+        break;
+      case 'name':
+        error = validateName(value);
+        break;
+    }
+    
+    setErrors(prev => ({
+      ...prev,
+      [field]: error || ''
+    }));
+    
+    return !error;
+  };
+
+  useEffect(() => {
+    if (debouncedEmail) validateField('email', debouncedEmail);
+  }, [debouncedEmail]);
+
+  useEffect(() => {
+    if (debouncedPassword) validateField('password', debouncedPassword);
+  }, [debouncedPassword]);
+
+  useEffect(() => {
+    if (debouncedName && isRegister) validateField('name', debouncedName);
+  }, [debouncedName, isRegister]);
+
+  const validateForm = () => {
+    const emailValid = validateField('email', email);
+    const passwordValid = validateField('password', password);
+    const nameValid = isRegister ? validateField('name', name) : true;
+    
+    return emailValid && passwordValid && nameValid;
+  };
 
   async function onLogin() {
-    if (!email || !password) {
-      Alert.alert(strings.error, strings.pleaseEnterEmailPassword);
+    if (!validateForm()) {
       return;
     }
 
@@ -33,15 +81,24 @@ export default function AuthScreen({ navigation }: any) {
       await apiService.login(email, password);
       navigation.replace('Main');
     } catch (error: any) {
-      Alert.alert(strings.loginFailed, error.message);
+      let errorMessage = error.message;
+      
+      if (errorMessage.includes('Invalid credentials')) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (errorMessage.includes('Network')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (!errorMessage) {
+        errorMessage = 'Login failed. Please try again.';
+      }
+      
+      Alert.alert(strings.loginFailed, errorMessage);
     } finally {
       setLoading(false);
     }
   }
 
   async function onRegister() {
-    if (!name || !email || !password) {
-      Alert.alert(strings.error, strings.pleaseFillAllFields);
+    if (!validateForm()) {
       return;
     }
 
@@ -50,7 +107,17 @@ export default function AuthScreen({ navigation }: any) {
       await apiService.register(name, email, password);
       navigation.replace('Main');
     } catch (error: any) {
-      Alert.alert(strings.registrationFailed, error.message);
+      let errorMessage = error.message;
+      
+      if (errorMessage.includes('User already exists')) {
+        errorMessage = 'An account with this email already exists. Please sign in instead.';
+      } else if (errorMessage.includes('Network')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (!errorMessage) {
+        errorMessage = 'Registration failed. Please try again.';
+      }
+      
+      Alert.alert(strings.registrationFailed, errorMessage);
     } finally {
       setLoading(false);
     }
@@ -81,10 +148,19 @@ export default function AuthScreen({ navigation }: any) {
       borderColor: theme.colors.outline,
       padding: 12,
       borderRadius: theme.radii.md,
-      marginBottom: 12,
+      marginBottom: 4,
       backgroundColor: theme.colors.surface,
       color: theme.colors.textPrimary,
       fontSize: 16,
+    },
+    inputError: {
+      borderColor: theme.colors.error,
+    },
+    errorText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginBottom: 8,
+      marginLeft: 4,
     },
     passwordContainer: {
       position: 'relative',
@@ -99,6 +175,9 @@ export default function AuthScreen({ navigation }: any) {
       backgroundColor: theme.colors.surface,
       color: theme.colors.textPrimary,
       fontSize: 16,
+    },
+    passwordInputError: {
+      borderColor: theme.colors.error,
     },
     eyeIcon: {
       position: 'absolute',
@@ -154,30 +233,37 @@ export default function AuthScreen({ navigation }: any) {
     <View style={styles.container}>
       <View style={styles.form}>
         {isRegister && (
-          <TextInput
-            placeholder={strings.name}
-            placeholderTextColor={theme.colors.textSecondary}
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-          />
+          <>
+            <TextInput
+              placeholder={strings.name}
+              placeholderTextColor={theme.colors.textSecondary}
+              value={name}
+              onChangeText={setName}
+              onBlur={() => validateField('name', name)}
+              style={[styles.input, errors.name && styles.inputError]}
+            />
+            {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+          </>
         )}
         <TextInput
           placeholder={strings.email}
           placeholderTextColor={theme.colors.textSecondary}
           value={email}
           onChangeText={setEmail}
-          style={styles.input}
+          onBlur={() => validateField('email', email)}
+          style={[styles.input, errors.email && styles.inputError]}
           keyboardType="email-address"
           autoCapitalize="none"
         />
+        {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
         <View style={styles.passwordContainer}>
           <TextInput
             placeholder={strings.password}
             placeholderTextColor={theme.colors.textSecondary}
             value={password}
             onChangeText={setPassword}
-            style={styles.passwordInput}
+            onBlur={() => validateField('password', password)}
+            style={[styles.passwordInput, errors.password && styles.passwordInputError]}
             secureTextEntry={!showPassword}
           />
           <TouchableOpacity 
@@ -191,6 +277,7 @@ export default function AuthScreen({ navigation }: any) {
             />
           </TouchableOpacity>
         </View>
+        {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
 
         <TouchableOpacity
           style={styles.primaryBtn}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
@@ -14,7 +15,19 @@ import { strings } from '../constants/strings';
 
 export default function OrdersScreen({ navigation }: any) {
   const { theme } = useTheme();
-  const { orders } = useAppData();
+  const { orders, loadOrders } = useAppData();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadOrders();
+    } catch (error) {
+      Alert.alert('Error', 'Failed to refresh orders');
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -147,27 +160,30 @@ export default function OrdersScreen({ navigation }: any) {
         data={orders}
         contentContainerStyle={{ padding: theme.spacing.md }}
         keyExtractor={(o: any) => o.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity 
             style={styles.orderCard}
             onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })}
           >
             <View style={styles.orderLeft}>
-              <Text style={styles.orderId}>{item.id}</Text>
+              <Text style={styles.orderId}>Order #{item.id}</Text>
               <Text style={styles.orderMeta}>
-                {new Date(item.createdAt || Date.now()).toLocaleDateString()} • {item.items?.length || 0} items
+                {new Date(item.createdAt || Date.now()).toLocaleString()} • {Array.isArray(item.items) ? item.items.length : 0} items
               </Text>
               <Text style={styles.orderTotal}>${item.total.toFixed(2)}</Text>
             </View>
             <View style={styles.orderRight}>
               <View style={styles.statusRow}>
                 <Icon 
-                  name={getStatusIcon(item.status)} 
+                  name={getStatusIcon(item.status || 'Processing')} 
                   size={16} 
-                  color={getStatusColor(item.status)} 
+                  color={getStatusColor(item.status || 'Processing')} 
                 />
-                <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
-                  {item.status}
+                <Text style={[styles.status, { color: getStatusColor(item.status || 'Processing') }]}>
+                  {item.status || 'Processing'}
                 </Text>
               </View>
               <View style={styles.actionsRow}>

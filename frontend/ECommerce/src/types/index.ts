@@ -14,9 +14,10 @@ export type CartItem = {
 };
 
 export type Order = {
-  id: string;
-  items: CartItem[];
+  id: number;
+  items: any; // JSON from backend
   total: number;
-  date: string; // ISO
-  status: 'Delivered' | 'Shipped' | 'Processing' | 'Cancelled';
+  createdAt: string; // ISO
+  userId: number;
+  status?: 'Delivered' | 'Shipped' | 'Processing' | 'Cancelled';
 };

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, ActivityIndicator } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import { strings } from '../constants/strings';
@@ -8,6 +8,26 @@ import { Alert } from 'react-native';
 
 export default function SettingsScreen({ navigation }: any) {
   const { theme, isDark, toggleTheme } = useTheme();
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      setError(null);
+      const data = await apiService.getUserProfile();
+      setUserData(data);
+    } catch (error: any) {
+      console.error('Failed to load user data:', error);
+      setError('Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -90,8 +110,19 @@ export default function SettingsScreen({ navigation }: any) {
           <Icon name="person" size={30} color="white" />
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.name}>{strings.johnDoe}</Text>
-          <Text style={styles.email}>{strings.johnDoeEmail}</Text>
+          {loading ? (
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          ) : error ? (
+            <TouchableOpacity onPress={loadUserData}>
+              <Text style={[styles.name, { color: theme.colors.error }]}>Failed to load profile</Text>
+              <Text style={styles.email}>Tap to retry</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <Text style={styles.name}>{userData?.name || 'User'}</Text>
+              <Text style={styles.email}>{userData?.email || 'user@example.com'}</Text>
+            </>
+          )}
         </View>
       </View>
       

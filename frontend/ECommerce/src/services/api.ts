@@ -7,42 +7,71 @@ class ApiService {
   private token: string | null = null;
 
   async setToken(token: string) {
-    this.token = token;
-    await AsyncStorage.setItem(TOKEN_KEY, token);
+    try {
+      this.token = token;
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+    } catch (error) {
+      console.error('Failed to save token:', error);
+      throw new Error('Failed to save authentication token');
+    }
   }
 
   async getStoredToken() {
-    if (!this.token) {
-      this.token = await AsyncStorage.getItem(TOKEN_KEY);
+    try {
+      if (!this.token) {
+        this.token = await AsyncStorage.getItem(TOKEN_KEY);
+      }
+      return this.token;
+    } catch (error) {
+      console.error('Failed to get stored token:', error);
+      return null;
     }
-    return this.token;
   }
 
   async logout() {
-    this.token = null;
-    await AsyncStorage.removeItem(TOKEN_KEY);
+    try {
+      this.token = null;
+      await AsyncStorage.removeItem(TOKEN_KEY);
+    } catch (error) {
+      console.error('Failed to clear token:', error);
+      // Continue with logout even if storage fails
+    }
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
-    const url = `${BASE_URL}${endpoint}`;
-    const token = await this.getStoredToken();
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    };
+    try {
+      const url = `${BASE_URL}${endpoint}`;
+      const token = await this.getStoredToken();
+      const config: RequestInit = {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+          ...options.headers,
+        },
+        ...options,
+      };
 
-    const response = await fetch(url, config);
-    const data = await response.json();
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        let errorMessage = 'Network request failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+        } catch {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
 
-    if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Network connection failed. Please check your internet connection.');
+      }
+      throw error;
     }
-
-    return data;
   }
 
   // Auth
@@ -83,6 +112,11 @@ class ApiService {
 
   async getOrderById(orderId: string) {
     return this.request(`/orders/${orderId}`);
+  }
+
+  // User Profile
+  async getUserProfile() {
+    return this.request('/auth/profile');
   }
 }
 

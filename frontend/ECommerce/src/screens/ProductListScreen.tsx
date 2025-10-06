@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,10 +15,31 @@ import ProductCard from '../components/ProductCard';
 
 export default function ProductListScreen({ navigation }: any) {
   const { theme, toggleTheme, isDark } = useTheme();
-  const { products, addToCart, loading, cart } = useAppData();
+  const { products, addToCart, loading, cart, error, loadProducts } = useAppData();
   const [grid, setGrid] = useState(true);
   const categories = Array.from(new Set(products.map((p: any) => p.category)));
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const handleCategoryPress = (category: string | null, index: number) => {
+    setActiveCategory(category);
+    
+    const totalItems = categories.length + 1; // +1 for "All" tab
+    const itemWidth = 100; // Approximate tab width
+    
+    // Auto-scroll logic for both directions
+    if (index <= 1) {
+      // First two items - scroll to beginning
+      scrollViewRef.current?.scrollTo({ x: 0, animated: true });
+    } else if (index >= totalItems - 2) {
+      // Last two items - scroll to end
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    } else {
+      // Middle items - scroll to show current item centered with context
+      const scrollPosition = Math.max(0, (index - 2) * itemWidth);
+      scrollViewRef.current?.scrollTo({ x: scrollPosition, animated: true });
+    }
+  };
 
   const filtered = products.filter((p: any) => {
     const matchesCat = activeCategory ? p.category === activeCategory : true;
@@ -198,15 +219,20 @@ export default function ProductListScreen({ navigation }: any) {
         </View>
 
         <View style={styles.tabsContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
+          <ScrollView 
+            ref={scrollViewRef}
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            style={styles.tabsScroll}
+          >
             <TouchableOpacity
-              onPress={() => setActiveCategory(null)}
+              onPress={() => handleCategoryPress(null, 0)}
               style={[styles.tab, !activeCategory && styles.tabActive]}
             >
               <Icon name="apps-outline" size={20} color={!activeCategory ? theme.colors.primary : theme.colors.textSecondary} />
               <Text style={[styles.tabText, !activeCategory && styles.tabTextActive]}>All</Text>
             </TouchableOpacity>
-            {categories.map(c => {
+            {categories.map((c, index) => {
               const getIcon = (category: string) => {
                 if (category.toLowerCase().includes('fashion')) return 'shirt-outline';
                 if (category.toLowerCase().includes('electronics')) return 'phone-portrait-outline';
@@ -219,7 +245,7 @@ export default function ProductListScreen({ navigation }: any) {
               return (
                 <TouchableOpacity
                   key={c}
-                  onPress={() => setActiveCategory(c)}
+                  onPress={() => handleCategoryPress(c, index + 1)}
                   style={[styles.tab, activeCategory === c && styles.tabActive]}
                 >
                   <Icon name={getIcon(c)} size={20} color={activeCategory === c ? theme.colors.primary : theme.colors.textSecondary} />
@@ -244,6 +270,17 @@ export default function ProductListScreen({ navigation }: any) {
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={{ marginTop: 16, color: theme.colors.textSecondary }}>Loading products...</Text>
+          </View>
+        ) : error ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <Icon name="alert-circle-outline" size={64} color={theme.colors.error} />
+            <Text style={{ marginTop: 16, color: theme.colors.error, textAlign: 'center' }}>{error}</Text>
+            <TouchableOpacity 
+              onPress={loadProducts}
+              style={{ marginTop: 16, padding: 12, backgroundColor: theme.colors.primary, borderRadius: 8 }}
+            >
+              <Text style={{ color: 'white' }}>Retry</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <FlatList
