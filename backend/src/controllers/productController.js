@@ -20,8 +20,8 @@ export const getProducts = async (req, res) => {
 // ✅ Seed some initial products (optional)
 export const seedProducts = async (req, res) => {
   try {
-    const existing = await prisma.product.count();
-    if (existing > 0) return res.json({ message: "Products already seeded" });
+    // Delete existing products to allow re-seeding
+    await prisma.product.deleteMany({});
 
     const products = [
       // Electronics
