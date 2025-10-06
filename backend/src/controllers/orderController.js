@@ -11,10 +11,6 @@ export const placeOrder = async (req, res) => {
 
     if (!total) return res.status(400).json({ message: "Total amount required" });
 
-    // Verify user exists
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
     const order = await prisma.order.create({
       data: { userId, items, total },
     });
