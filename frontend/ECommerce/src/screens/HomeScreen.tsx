@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Dimensions } from 'react-native';
 import { apiService } from '../services/api';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,7 +15,7 @@ import SearchScreen from './SearchScreen';
 import ProductDetailScreen from './ProductDetailScreen';
 import OrderDetailScreen from './OrderDetailScreen';
 import { useMockData } from '../hooks/useMockData';
-import { scale, iconScale, fontScale } from '../utils/responsive';
+import { isTablet, isLargeDevice } from '../utils/responsive';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -34,19 +34,20 @@ function MainTabs() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
-          height: scale(64),
-          paddingBottom: scale(8),
+          height: isTablet() || isLargeDevice() ? 70 : 60,
+          paddingBottom: isTablet() || isLargeDevice() ? 10 : 8,
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.outline,
         },
         tabBarLabelStyle: {
-          fontSize: fontScale(12),
+          fontSize: isLargeDevice() ? 16 : isTablet() ? 14 : 12,
         },
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ color }) => {
           let name: any = 'home';
           if (route.name === 'Products') name = 'grid-outline';
           if (route.name === 'Settings') name = 'settings-outline';
-          return <Icon name={name} size={iconScale(size)} color={color} />;
+          const iconSize = isTablet() || isLargeDevice() ? 28 : 24;
+          return <Icon name={name} size={iconSize} color={color} />;
         },
       })}
     >

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,20 +7,30 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
 import ProductCard from '../components/ProductCard';
-import { wp, hp, scale, isTablet, getResponsiveValue, iconScale, fontScale } from '../utils/responsive';
+import { getGridColumns, getCardWidth, getGridPadding, getCardGap, iconScale, fontScale, isTablet, isLargeDevice } from '../utils/responsive';
+import { useGrid } from '../context/ThemeContext';
 
 export default function ProductListScreen({ navigation }: any) {
   const { theme, toggleTheme, isDark } = useTheme();
   const { products, addToCart, loading, cart, error, loadProducts } = useAppData();
-  const [grid, setGrid] = useState(true);
+  const { cardType, toggleCardType } = useGrid();
   const categories = Array.from(new Set(products.map((p: any) => p.category)));
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
   const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   const handleCategoryPress = (category: string | null, index: number) => {
     setActiveCategory(category);
@@ -145,7 +155,7 @@ export default function ProductListScreen({ navigation }: any) {
       backgroundColor: theme.colors.primary + '20',
     },
     tabText: {
-      fontSize: 12,
+      fontSize: isLargeDevice() ? 16 : isTablet() ? 14 : 12,
       color: theme.colors.textSecondary,
       marginTop: 4,
     },
@@ -230,7 +240,7 @@ export default function ProductListScreen({ navigation }: any) {
               onPress={() => handleCategoryPress(null, 0)}
               style={[styles.tab, !activeCategory && styles.tabActive]}
             >
-              <Icon name="apps-outline" size={iconScale(20)} color={!activeCategory ? theme.colors.primary : theme.colors.textSecondary} />
+              <Icon name="apps-outline" size={isLargeDevice() ? 26 : isTablet() ? 24 : 20} color={!activeCategory ? theme.colors.primary : theme.colors.textSecondary} />
               <Text style={[styles.tabText, !activeCategory && styles.tabTextActive]}>All</Text>
             </TouchableOpacity>
             {categories.map((c, index) => {
@@ -249,7 +259,7 @@ export default function ProductListScreen({ navigation }: any) {
                   onPress={() => handleCategoryPress(c, index + 1)}
                   style={[styles.tab, activeCategory === c && styles.tabActive]}
                 >
-                  <Icon name={getIcon(c)} size={iconScale(20)} color={activeCategory === c ? theme.colors.primary : theme.colors.textSecondary} />
+                  <Icon name={getIcon(c)} size={isLargeDevice() ? 26 : isTablet() ? 24 : 20} color={activeCategory === c ? theme.colors.primary : theme.colors.textSecondary} />
                   <Text style={[styles.tabText, activeCategory === c && styles.tabTextActive]}>{c}</Text>
                 </TouchableOpacity>
               );
@@ -257,11 +267,11 @@ export default function ProductListScreen({ navigation }: any) {
           </ScrollView>
           <TouchableOpacity 
             style={styles.gridToggle}
-            onPress={() => setGrid(!grid)}
+            onPress={toggleCardType}
           >
             <Icon 
-              name={grid ? 'list-outline' : 'grid-outline'} 
-              size={iconScale(20)} 
+              name={cardType === 'small' ? 'apps-outline' : 'grid-outline'} 
+              size={isLargeDevice() ? 26 : isTablet() ? 24 : 20} 
               color={theme.colors.textPrimary} 
             />
           </TouchableOpacity>
@@ -285,13 +295,21 @@ export default function ProductListScreen({ navigation }: any) {
           </View>
         ) : (
           <FlatList
-            contentContainerStyle={{ padding: 8, paddingTop: 0 }}
+            contentContainerStyle={{ 
+              padding: getGridPadding(),
+              paddingTop: getGridPadding(),
+              gap: getCardGap()
+            }}
             data={filtered}
-            numColumns={grid ? 4 : 2}
-            key={grid ? 'g-4' : 'l-2'}
-            columnWrapperStyle={grid ? { justifyContent: 'space-around', paddingHorizontal: 4 } : { justifyContent: 'space-between', paddingHorizontal: 16 }}
+            numColumns={getGridColumns(cardType)}
+            key={`${cardType}-${getGridColumns(cardType)}-${dimensions.width}`}
+            columnWrapperStyle={getGridColumns(cardType) > 1 ? {
+              justifyContent: 'flex-start',
+              gap: getCardGap(),
+              paddingHorizontal: 0
+            } : undefined}
             renderItem={({ item }) => (
-              <ProductCard product={item} onAdd={addToCart} navigation={navigation} isGrid={grid} />
+              <ProductCard product={item} onAdd={addToCart} navigation={navigation} cardType={cardType} />
             )}
             keyExtractor={(i: any) => i.id}
           />

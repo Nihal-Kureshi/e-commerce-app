@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
 import ProductCard from '../components/ProductCard';
 import { strings } from '../constants/strings';
+import { getGridColumns, getGridPadding, getCardGap } from '../utils/responsive';
+import { useGrid } from '../context/ThemeContext';
 
 export default function SearchScreen({ navigation }: any) {
   const { theme } = useTheme();
   const { products, addToCart } = useAppData();
+  const { cardType } = useGrid();
   const [query, setQuery] = useState('');
   const [searchError, setSearchError] = useState('');
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    return () => subscription?.remove();
+  }, []);
 
   const validateSearch = (searchQuery: string) => {
     if (searchQuery.length > 0 && searchQuery.length < 2) {
@@ -98,12 +109,20 @@ export default function SearchScreen({ navigation }: any) {
       </View>
       <FlatList
         style={styles.results}
-        contentContainerStyle={{ padding: 8 }}
+        contentContainerStyle={{ 
+          padding: getGridPadding(),
+          gap: getCardGap()
+        }}
         data={filtered}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-around' }}
+        numColumns={getGridColumns(cardType)}
+        key={`search-${getGridColumns(cardType)}-${dimensions.width}`}
+        columnWrapperStyle={getGridColumns(cardType) > 1 ? {
+          justifyContent: 'flex-start',
+          gap: getCardGap(),
+          paddingHorizontal: 0
+        } : undefined}
         renderItem={({ item }) => (
-          <ProductCard product={item} onAdd={addToCart} navigation={navigation} isGrid={true} />
+          <ProductCard product={item} onAdd={addToCart} navigation={navigation} cardType={cardType} />
         )}
         keyExtractor={(i: any) => i.id}
         ListEmptyComponent={
