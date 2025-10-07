@@ -1,62 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import React from 'react';
+import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
-import ProductCard from '../components/ProductCard';
 import { strings } from '../constants/strings';
-import { getGridColumns, getGridPadding, getCardGap } from '../utils/responsive';
-import { useGrid } from '../context/ThemeContext';
+import { useSearch } from '../hooks/useSearch';
+import ScreenHeader from '../components/ScreenHeader';
+import ProductGrid from '../components/ProductGrid';
+import KeyboardAvoidingWrapper from '../components/KeyboardAvoidingWrapper';
+import { NavigationProp } from '../types';
 
-export default function SearchScreen({ navigation }: any) {
+interface Props {
+  navigation: NavigationProp;
+}
+
+export default function SearchScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const { products, addToCart } = useAppData();
-  const { cardType } = useGrid();
-  const [query, setQuery] = useState('');
-  const [searchError, setSearchError] = useState('');
-  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
-
-  useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      setDimensions(window);
-    });
-    return () => subscription?.remove();
-  }, []);
-
-  const validateSearch = (searchQuery: string) => {
-    if (searchQuery.length > 0 && searchQuery.length < 2) {
-      setSearchError('Search must be at least 2 characters');
-      return false;
-    }
-    setSearchError('');
-    return true;
-  };
-
-  const filtered = products.filter((p: any) =>
-    p.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const { query, searchError, filteredItems, handleSearchChange } = useSearch(products, 'name');
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: theme.colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outline,
-    },
-    backButton: {
-      padding: 8,
-      marginRight: 16,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.colors.textPrimary,
     },
     search: {
       backgroundColor: theme.colors.surface,
@@ -68,14 +33,6 @@ export default function SearchScreen({ navigation }: any) {
       margin: 20,
       fontSize: 16,
     },
-    results: {
-      flex: 1,
-    },
-    emptyText: {
-      textAlign: 'center',
-      color: theme.colors.textSecondary,
-      marginTop: 50,
-    },
     errorText: {
       color: theme.colors.error,
       fontSize: 12,
@@ -86,49 +43,28 @@ export default function SearchScreen({ navigation }: any) {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Search</Text>
-      </View>
+    <KeyboardAvoidingWrapper style={styles.container}>
+      <ScreenHeader title="Search" onBack={() => navigation.goBack()} />
       <View>
         <TextInput
           placeholder={strings.searchProducts}
           placeholderTextColor={theme.colors.textSecondary}
           style={[styles.search, searchError && { borderColor: theme.colors.error }]}
           value={query}
-          onChangeText={(text) => {
-            setQuery(text);
-            validateSearch(text);
-          }}
+          onChangeText={handleSearchChange}
           autoFocus
         />
         {searchError ? <Text style={styles.errorText}>{searchError}</Text> : null}
       </View>
-      <FlatList
-        style={styles.results}
-        contentContainerStyle={{ 
-          padding: getGridPadding(),
-          gap: getCardGap()
-        }}
-        data={filtered}
-        numColumns={getGridColumns(cardType)}
-        key={`search-${getGridColumns(cardType)}-${dimensions.width}`}
-        columnWrapperStyle={getGridColumns(cardType) > 1 ? {
-          justifyContent: 'flex-start',
-          gap: getCardGap(),
-          paddingHorizontal: 0
-        } : undefined}
-        renderItem={({ item }) => (
-          <ProductCard product={item} onAdd={addToCart} navigation={navigation} cardType={cardType} />
-        )}
-        keyExtractor={(i: any) => i.id}
-        ListEmptyComponent={
-          query ? <Text style={styles.emptyText}>{strings.noProductsFound}</Text> : null
-        }
+      <ProductGrid
+        products={filteredItems}
+        onAddToCart={addToCart}
+        navigation={navigation}
+        emptyMessage={query ? strings.noProductsFound : ''}
+        maxToRenderPerBatch={8}
+        windowSize={8}
+        initialNumToRender={4}
       />
-    </View>
+    </KeyboardAvoidingWrapper>
   );
 }

@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  ScrollView,
 } from 'react-native';
 import { Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -16,8 +15,15 @@ import { strings } from '../constants/strings';
 import { validateEmail, validatePassword, validateName } from '../utils/validation';
 import { useDebounce } from '../hooks/useDebounce';
 import { rScale, rIcon, rFont, isTablet, isLargeDevice } from '../utils/responsive';
+import { NavigationProp } from '../types';
+import { errorHandler, ValidationError, AuthError, NetworkError } from '../utils/errorHandler';
+import KeyboardAwareScrollView from '../components/KeyboardAwareScrollView';
 
-export default function AuthScreen({ navigation }: any) {
+interface Props {
+  navigation: NavigationProp;
+}
+
+export default function AuthScreen({ navigation }: Props) {
   const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -83,17 +89,22 @@ export default function AuthScreen({ navigation }: any) {
       await apiService.login(email, password);
       navigation.replace('Main');
     } catch (error: any) {
-      let errorMessage = error.message;
+      errorHandler.logError(error, 'AuthScreen.onLogin');
       
-      if (errorMessage.includes('Invalid credentials')) {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (errorMessage.includes('Network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (!errorMessage) {
-        errorMessage = 'Login failed. Please try again.';
+      if (error instanceof ValidationError) {
+        // Show field-specific error
+        if (error.field) {
+          setErrors(prev => ({ ...prev, [error.field!]: error.message }));
+        } else {
+          Alert.alert(strings.loginFailed, error.message);
+        }
+      } else if (error instanceof AuthError) {
+        Alert.alert(strings.loginFailed, 'Invalid email or password. Please try again.');
+      } else if (error instanceof NetworkError) {
+        Alert.alert(strings.loginFailed, 'Please check your internet connection and try again.');
+      } else {
+        Alert.alert(strings.loginFailed, 'Login failed. Please try again.');
       }
-      
-      Alert.alert(strings.loginFailed, errorMessage);
     } finally {
       setLoading(false);
     }
@@ -109,17 +120,22 @@ export default function AuthScreen({ navigation }: any) {
       await apiService.register(name, email, password);
       navigation.replace('Main');
     } catch (error: any) {
-      let errorMessage = error.message;
+      errorHandler.logError(error, 'AuthScreen.onRegister');
       
-      if (errorMessage.includes('User already exists')) {
-        errorMessage = 'An account with this email already exists. Please sign in instead.';
-      } else if (errorMessage.includes('Network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (!errorMessage) {
-        errorMessage = 'Registration failed. Please try again.';
+      if (error instanceof ValidationError) {
+        // Show field-specific error
+        if (error.field) {
+          setErrors(prev => ({ ...prev, [error.field!]: error.message }));
+        } else {
+          Alert.alert(strings.registrationFailed, error.message);
+        }
+      } else if (error.message?.includes('User already exists')) {
+        Alert.alert(strings.registrationFailed, 'An account with this email already exists. Please sign in instead.');
+      } else if (error instanceof NetworkError) {
+        Alert.alert(strings.registrationFailed, 'Please check your internet connection and try again.');
+      } else {
+        Alert.alert(strings.registrationFailed, 'Registration failed. Please try again.');
       }
-      
-      Alert.alert(strings.registrationFailed, errorMessage);
     } finally {
       setLoading(false);
     }
@@ -238,12 +254,10 @@ export default function AuthScreen({ navigation }: any) {
   });
 
   return (
-    <View style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+    <KeyboardAwareScrollView 
+      containerStyle={styles.container}
+      contentContainerStyle={styles.scrollContainer}
+    >
         <View style={styles.form}>
         {isRegister && (
           <>
@@ -336,8 +350,7 @@ export default function AuthScreen({ navigation }: any) {
           </Text>
         </TouchableOpacity>
         </View>
-      </ScrollView>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 

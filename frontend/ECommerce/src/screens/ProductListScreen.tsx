@@ -12,8 +12,8 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
-import ProductCard from '../components/ProductCard';
-import { getGridColumns, getCardWidth, getGridPadding, getCardGap, iconScale, fontScale, isTablet, isLargeDevice } from '../utils/responsive';
+import ProductGrid from '../components/ProductGrid';
+import { getGridPadding, iconScale, isTablet, isLargeDevice } from '../utils/responsive';
 import { useGrid } from '../context/ThemeContext';
 
 export default function ProductListScreen({ navigation }: any) {
@@ -210,12 +210,14 @@ export default function ProductListScreen({ navigation }: any) {
                 <TouchableOpacity 
                   style={styles.headerButton} 
                   onPress={() => navigation.navigate('Search')}
+                  testID="search-button"
                 >
                   <Icon name="search-outline" size={iconScale(20)} color="#FFFFFF" />
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.headerButton} 
                   onPress={() => navigation.navigate('Cart')}
+                  testID="cart-button"
                 >
                   <Icon name="bag-outline" size={iconScale(20)} color="#FFFFFF" />
                   {cart.length > 0 && (
@@ -294,25 +296,14 @@ export default function ProductListScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
         ) : (
-          <FlatList
-            contentContainerStyle={{ 
-              padding: getGridPadding(),
-              paddingTop: getGridPadding(),
-              gap: getCardGap()
-            }}
-            data={filtered}
-            numColumns={getGridColumns(cardType)}
-            key={`${cardType}-${getGridColumns(cardType)}-${dimensions.width}`}
-            columnWrapperStyle={getGridColumns(cardType) > 1 ? {
-              justifyContent: 'flex-start',
-              gap: getCardGap(),
-              paddingHorizontal: 0
-            } : undefined}
-            renderItem={({ item }) => (
-              <ProductCard product={item} onAdd={addToCart} navigation={navigation} cardType={cardType} />
-            )}
-            keyExtractor={(i: any) => i.id}
-          />
+          <View style={{ paddingTop: getGridPadding() }}>
+            <ProductGrid
+              products={filtered}
+              onAddToCart={addToCart}
+              navigation={navigation}
+              emptyMessage="No products available"
+            />
+          </View>
         )}
       </View>
     </>

@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
 import { strings } from '../constants/strings';
+import ScreenHeader from '../components/ScreenHeader';
 
 export default function OrdersScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -52,23 +53,7 @@ export default function OrdersScreen({ navigation }: any) {
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: theme.colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outline,
-    },
-    backButton: {
-      padding: 8,
-      marginRight: 16,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.colors.textPrimary,
-    },
+
 
     orderCard: {
       flexDirection: 'row',
@@ -149,12 +134,7 @@ export default function OrdersScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Orders</Text>
-      </View>
+      <ScreenHeader title="My Orders" onBack={() => navigation.goBack()} />
 
       <FlatList
         data={orders}

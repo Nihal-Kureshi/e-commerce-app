@@ -13,6 +13,7 @@ import { useAppData } from './HomeScreen';
 import { useTheme } from '../context/ThemeContext';
 import { strings } from '../constants/strings';
 import { wp, scale, isTablet, getResponsiveValue, iconScale, fontScale } from '../utils/responsive';
+import ScreenHeader from '../components/ScreenHeader';
 
 export default function CartScreen({ navigation }: any) {
   const { theme, isDark } = useTheme();
@@ -88,23 +89,7 @@ export default function CartScreen({ navigation }: any) {
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: 16,
-      backgroundColor: theme.colors.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.outline,
-    },
-    backButton: {
-      padding: 8,
-      marginRight: 16,
-    },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: theme.colors.textPrimary,
-    },
+
 
     selectAllRow: {
       flexDirection: 'row',
@@ -265,12 +250,7 @@ export default function CartScreen({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={iconScale(24)} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Shopping Cart</Text>
-      </View>
+      <ScreenHeader title="Shopping Cart" onBack={() => navigation.goBack()} />
 
       <FlatList
         data={cart}

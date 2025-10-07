@@ -1,24 +1,18 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { Product } from '../types';
+import { ProductCardProps } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { getCardWidth, scale, fontScale, iconScale, getCardGap } from '../utils/responsive';
+import SafeComponent from './SafeComponent';
 
-type Props = {
-  product: Product;
-  onAdd: (p: Product) => void;
-  navigation?: any;
-  cardType: 'big' | 'small';
-};
-
-export default function ProductCard({
+function ProductCard({
   product,
   onAdd,
   navigation,
   cardType,
-}: Props) {
+}: ProductCardProps) {
   const { theme } = useTheme();
 
   const styles = StyleSheet.create({
@@ -91,30 +85,42 @@ export default function ProductCard({
   });
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation?.navigate('ProductDetail', { product })}
-    >
-      <Image source={{ uri: product.image }} style={styles.image} />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.7)']}
-        style={styles.gradientOverlay}
-      />
-      <View style={styles.content}>
-        <Text numberOfLines={2} style={styles.title}>
-          {product.name}
-        </Text>
-        <View style={styles.row}>
-          <Text style={styles.price}>${product.price.toFixed(2)}</Text>
-          <TouchableOpacity
-            onPress={() => onAdd(product)}
-            style={styles.addBtn}
-            accessibilityLabel={`Add ${product.name} to cart`}
-          >
-            <Icon name="add" size={iconScale(16)} color="#FFFFFF" />
-          </TouchableOpacity>
+    <SafeComponent componentName="ProductCard">
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => navigation?.navigate('ProductDetail', { product })}
+        testID="product-card"
+      >
+        <Image source={{ uri: product.image }} style={styles.image} />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.7)']}
+          style={styles.gradientOverlay}
+        />
+        <View style={styles.content}>
+          <Text numberOfLines={2} style={styles.title}>
+            {product.name}
+          </Text>
+          <View style={styles.row}>
+            <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+            <TouchableOpacity
+              onPress={() => onAdd(product)}
+              style={styles.addBtn}
+              accessibilityLabel={`Add ${product.name} to cart`}
+              testID="add-to-cart-button"
+            >
+              <Icon name="add" size={iconScale(16)} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </SafeComponent>
   );
 }
+
+export default React.memo(ProductCard, (prevProps, nextProps) => {
+  return (
+    prevProps.product.id === nextProps.product.id &&
+    prevProps.cardType === nextProps.cardType &&
+    prevProps.product.price === nextProps.product.price
+  );
+});

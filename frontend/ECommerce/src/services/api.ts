@@ -1,4 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { errorHandler, NetworkError, AuthError, ValidationError } from '../utils/errorHandler';
+import { validators, validateApiResponse, validateNetworkResponse } from '../utils/validators';
+import { LoginRequest, RegisterRequest, AuthResponse, PlaceOrderRequest } from '../types';
 
 const BASE_URL = 'https://e-commerce-app-0ayo.onrender.com/api';
 const TOKEN_KEY = 'auth_token';
@@ -75,22 +78,53 @@ class ApiService {
   }
 
   // Auth
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<AuthResponse> {
+    // Validate input
+    const emailError = validators.email(email);
+    if (emailError) throw new ValidationError(emailError, 'email');
+    
+    const passwordError = validators.password(password);
+    if (passwordError) throw new ValidationError(passwordError, 'password');
+
+    const loginData: LoginRequest = { email, password };
+    
     const data = await this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(loginData),
     });
+    
+    // Validate response
+    const validationError = validateApiResponse(data, ['id', 'email', 'token']);
+    if (validationError) throw new ValidationError(validationError);
+    
     await this.setToken(data.token);
-    return data;
+    return data as AuthResponse;
   }
 
-  async register(name: string, email: string, password: string) {
+  async register(name: string, email: string, password: string): Promise<AuthResponse> {
+    // Validate input
+    const nameError = validators.name(name);
+    if (nameError) throw new ValidationError(nameError, 'name');
+    
+    const emailError = validators.email(email);
+    if (emailError) throw new ValidationError(emailError, 'email');
+    
+    const passwordError = validators.password(password);
+    if (passwordError) throw new ValidationError(passwordError, 'password');
+
+    const registerData: RegisterRequest = { name, email, password };
+    
     const data = await this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify(registerData),
     });
+    
+    // Validate response
+    const validationError = validateApiResponse(data, ['id', 'email', 'token']);
+    if (validationError) throw new ValidationError(validationError);
+    
     await this.setToken(data.token);
-    return data;
+    return data as AuthResponse;
   }
 
   // Products
@@ -99,7 +133,16 @@ class ApiService {
   }
 
   // Orders
-  async placeOrder(orderData: any) {
+  async placeOrder(orderData: PlaceOrderRequest) {
+    // Validate order data
+    if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+      throw new ValidationError('Order must contain at least one item');
+    }
+    
+    if (typeof orderData.total !== 'number' || orderData.total <= 0) {
+      throw new ValidationError('Invalid order total');
+    }
+
     return this.request('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
