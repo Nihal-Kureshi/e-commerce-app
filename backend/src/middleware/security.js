@@ -50,20 +50,28 @@ export const sanitizeInput = (req, res, next) => {
                 .replace(/on\w+\s*=/gi, '');
     }
     
-    if (typeof obj === 'object' && obj !== null) {
+    if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+      const sanitized = {};
       for (const key in obj) {
-        obj[key] = sanitize(obj[key]);
+        if (obj.hasOwnProperty(key)) {
+          sanitized[key] = sanitize(obj[key]);
+        }
       }
+      return sanitized;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => sanitize(item));
     }
     
     return obj;
   };
 
-  if (req.body) {
+  if (req.body && typeof req.body === 'object') {
     req.body = sanitize(req.body);
   }
   
-  if (req.query) {
+  if (req.query && typeof req.query === 'object') {
     req.query = sanitize(req.query);
   }
   

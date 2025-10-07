@@ -10,7 +10,7 @@ export const getProducts = async (req, res) => {
       where.category = category;
     }
     if (search) {
-      where.name = { contains: search, mode: "insensitive" };
+      where.name = { contains: search };
     }
 
     const products = await prisma.product.findMany({ 

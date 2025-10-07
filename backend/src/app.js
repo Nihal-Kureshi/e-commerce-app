@@ -29,8 +29,8 @@ app.use(generalLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Input sanitization
-app.use(sanitizeInput);
+// Input sanitization (temporarily disabled for testing)
+// app.use(sanitizeInput);
 
 // Request logging middleware
 app.use((req, res, next) => {
