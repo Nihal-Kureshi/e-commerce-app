@@ -5,9 +5,14 @@ import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+import { securityHeaders, sanitizeInput } from "./middleware/security.js";
+import { generalLimiter } from "./middleware/rateLimiter.js";
 
 dotenv.config();
 const app = express();
+
+// Security middleware (should be first)
+app.use(securityHeaders);
 
 // CORS configuration
 app.use(cors({ 
@@ -17,9 +22,15 @@ app.use(cors({
   credentials: true 
 }));
 
+// Rate limiting (apply to all requests)
+app.use(generalLimiter);
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Input sanitization
+app.use(sanitizeInput);
 
 // Request logging middleware
 app.use((req, res, next) => {
