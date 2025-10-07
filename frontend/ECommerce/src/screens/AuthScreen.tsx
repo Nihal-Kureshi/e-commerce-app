@@ -89,22 +89,17 @@ export default function AuthScreen({ navigation }: Props) {
       await apiService.login(email, password);
       navigation.replace('Main');
     } catch (error: any) {
-      errorHandler.logError(error, 'AuthScreen.onLogin');
+      console.error('Login error:', error);
       
-      if (error instanceof ValidationError) {
-        // Show field-specific error
-        if (error.field) {
-          setErrors(prev => ({ ...prev, [error.field!]: error.message }));
-        } else {
-          Alert.alert(strings.loginFailed, error.message);
-        }
-      } else if (error instanceof AuthError) {
-        Alert.alert(strings.loginFailed, 'Invalid email or password. Please try again.');
-      } else if (error instanceof NetworkError) {
-        Alert.alert(strings.loginFailed, 'Please check your internet connection and try again.');
-      } else {
-        Alert.alert(strings.loginFailed, 'Login failed. Please try again.');
+      let errorMessage = error.message || 'Login failed. Please try again.';
+      
+      if (errorMessage.includes('Invalid credentials')) {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (errorMessage.includes('Network') || errorMessage.includes('connection')) {
+        errorMessage = 'Please check your internet connection and try again.';
       }
+      
+      Alert.alert(strings.loginFailed, errorMessage);
     } finally {
       setLoading(false);
     }
@@ -120,22 +115,17 @@ export default function AuthScreen({ navigation }: Props) {
       await apiService.register(name, email, password);
       navigation.replace('Main');
     } catch (error: any) {
-      errorHandler.logError(error, 'AuthScreen.onRegister');
+      console.error('Register error:', error);
       
-      if (error instanceof ValidationError) {
-        // Show field-specific error
-        if (error.field) {
-          setErrors(prev => ({ ...prev, [error.field!]: error.message }));
-        } else {
-          Alert.alert(strings.registrationFailed, error.message);
-        }
-      } else if (error.message?.includes('User already exists')) {
-        Alert.alert(strings.registrationFailed, 'An account with this email already exists. Please sign in instead.');
-      } else if (error instanceof NetworkError) {
-        Alert.alert(strings.registrationFailed, 'Please check your internet connection and try again.');
-      } else {
-        Alert.alert(strings.registrationFailed, 'Registration failed. Please try again.');
+      let errorMessage = error.message || 'Registration failed. Please try again.';
+      
+      if (errorMessage.includes('User already exists')) {
+        errorMessage = 'An account with this email already exists. Please sign in instead.';
+      } else if (errorMessage.includes('Network') || errorMessage.includes('connection')) {
+        errorMessage = 'Please check your internet connection and try again.';
       }
+      
+      Alert.alert(strings.registrationFailed, errorMessage);
     } finally {
       setLoading(false);
     }

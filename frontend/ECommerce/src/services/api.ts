@@ -79,51 +79,28 @@ class ApiService {
 
   // Auth
   async login(email: string, password: string): Promise<AuthResponse> {
-    // Validate input
-    const emailError = validators.email(email);
-    if (emailError) throw new ValidationError(emailError, 'email');
-    
-    const passwordError = validators.password(password);
-    if (passwordError) throw new ValidationError(passwordError, 'password');
-
-    const loginData: LoginRequest = { email, password };
-    
     const data = await this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(loginData),
+      body: JSON.stringify({ email, password }),
     });
     
-    // Validate response
-    const validationError = validateApiResponse(data, ['id', 'email', 'token']);
-    if (validationError) throw new ValidationError(validationError);
+    if (data.token) {
+      await this.setToken(data.token);
+    }
     
-    await this.setToken(data.token);
     return data as AuthResponse;
   }
 
   async register(name: string, email: string, password: string): Promise<AuthResponse> {
-    // Validate input
-    const nameError = validators.name(name);
-    if (nameError) throw new ValidationError(nameError, 'name');
-    
-    const emailError = validators.email(email);
-    if (emailError) throw new ValidationError(emailError, 'email');
-    
-    const passwordError = validators.password(password);
-    if (passwordError) throw new ValidationError(passwordError, 'password');
-
-    const registerData: RegisterRequest = { name, email, password };
-    
     const data = await this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(registerData),
+      body: JSON.stringify({ name, email, password }),
     });
     
-    // Validate response
-    const validationError = validateApiResponse(data, ['id', 'email', 'token']);
-    if (validationError) throw new ValidationError(validationError);
+    if (data.token) {
+      await this.setToken(data.token);
+    }
     
-    await this.setToken(data.token);
     return data as AuthResponse;
   }
 
